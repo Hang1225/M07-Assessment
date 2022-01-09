@@ -169,6 +169,7 @@ class menu:
         _input_week = input(f'Week #[1-52]: ')
         if not _input_year: _input_year = currentYear # if empty, set default value
         if not _input_week: _input_week = currentWeek # if empty, set default value
+        # input integrity check
         try:
             _input_year = int(_input_year)
             _input_week = int(_input_week)
@@ -178,9 +179,10 @@ class menu:
             self.returnMain()
             return
 
+        # prompt weather for current week
         if _input_year == currentYear and _input_week == currentWeek:
             _input_weather = textValidate(input(self.dict[self.code]['weather'])) # prompt weather
-            while _input_weather == -1: #wrong input type
+            while _input_weather == -1: #input type error
                 print("Please enter 'y' or 'no'.")
                 _input_weather = textValidate(input(self.dict[self.code]['weather']))
             else:
@@ -190,6 +192,8 @@ class menu:
                     # Return to main menu
                     self.returnMain()
                     return
+        
+        # regular view
         print(self.dict[self.code]['view'].format(year= _input_year, week= _input_week))
         self.obj.displayHolidaysInWeek(self.obj.filter_holidays_by_week(_input_year,_input_week))
         # Return to main menu
@@ -206,8 +210,7 @@ class menu:
         else:
             if _input_exit:
                 self.obj.exitReport()
-                print('')
-                print(self.dict[self.code]['yes'])
+                print(f"\n{self.dict[self.code]['yes']}")
             elif not _input_exit:
                 # Return to main menu
                 self.returnMain()
@@ -238,12 +241,17 @@ class HolidayList:
    
     def addHoliday(self,holidayObj):
         if type(holidayObj) == Holiday:
-            self.addCount += 1
-            self.innerHolidays.append(holidayObj)
-            self.saveChanges = False
-            print(f'added holiday: {holidayObj.name}')  
+            #duplicate check
+            if self.findHoliday(holidayObj.name,holidayObj.date) != None:
+                print('This holiday already exists.')
+                return
+            else:
+                self.addCount += 1
+                self.innerHolidays.append(holidayObj)
+                self.saveChanges = False
+                print(f'added holiday: {holidayObj.name}')  
         else:
-            print(f'error adding holiday')  
+            print(f'error adding holiday: wrong data type.')  
         return
 
         # ***
@@ -252,12 +260,9 @@ class HolidayList:
         # print to the user that you added a holiday
 
     def findHoliday(self, HolidayName, Date):
-        for holiday in self.innerHolidays:
-            if holiday.name == HolidayName and holiday.date == Date:
-                return holiday
-            else:
-                return None
-        
+        # should only be 1 entity or None
+        for holiday in list(filter(lambda x: x.name == HolidayName and x.date == Date ,self.innerHolidays)):
+            return holiday
         # **
         # Find Holiday in innerHolidays
         # Return Holiday
@@ -332,13 +337,11 @@ class HolidayList:
                     # _dayofweek = x.find('td',attrs={'class':'nw'}).get_text()
                     _holidayobj = Holiday(_holidayDesc[-1],_date[-1])
                     # duplicate check
-                    for innerholiday in self.innerHolidays:
-                        if _holidayobj.name in innerholiday.name and _holidayobj.date == innerholiday.date:
+                    if self.findHoliday(_holidayobj.name,_holidayobj.date) != None: #repeat found
                             self.duplicateCount += 1
                             print('repeat found!')
                             print(f'\tname:{_holidayobj.name}')
                             print(f'\tdate:{_holidayobj.date}')
-                            break
                     else:
                         self.scrapeCount += 1
                         self.addHoliday(_holidayobj)
