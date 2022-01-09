@@ -128,7 +128,6 @@ class menu:
         _input_date = strToDate(input('Date (yyyy-mm-dd): '))
         while _input_date == -1: #error
             print(self.dict[self.code]["error"])
-            _input_holiday = input('Holiday: ')
             _input_date = strToDate(input('Date (yyyy-mm-dd): '))
         else:
             self.obj.addHoliday(Holiday(_input_holiday,_input_date))
@@ -150,7 +149,7 @@ class menu:
     def saveHoliday(self):
         _input = textValidate(input(''))
         while _input == -1: # wrong input type
-            print("Please enter 'y' or 'no'.")
+            print("Please enter 'y' or 'n'.")
             _input = textValidate(input(''))
         else:
             if _input: #true
@@ -165,20 +164,26 @@ class menu:
     def viewHoliday(self):
         currentYear = datetime.date.today().year
         currentWeek = datetime.date.today().isocalendar()[1]
-        _input_year = input(f'Year: ')
-        _input_week = input(f'Week #[1-52]: ')
+        _input_year = input('Year: ')
+        _input_week = input('Week #[1-52]: ')
         if not _input_year: _input_year = currentYear # if empty, set default value
         if not _input_week: _input_week = currentWeek # if empty, set default value
         # input integrity check
         try:
             _input_year = int(_input_year)
             _input_week = int(_input_week)
-        except:
-            print('Please enter a number.')
+            while len(str(_input_year)) != 4: # restrict year to be in yyyy format
+                print("Please enter a year in 'yyyy' format.")
+                _input_year = int(input('Year: '))
+            while _input_week > 52 or _input_week < 1: # week range restriction
+                print('Please enter a number between 1-52.')
+                _input_week = int(input('Week #[1-52]: '))
+        except ValueError as err:
+            print(f'Please enter a number. {err}')
             # Return to main menu
             self.returnMain()
             return
-
+        
         # prompt weather for current week
         if _input_year == currentYear and _input_week == currentWeek:
             _input_weather = textValidate(input(self.dict[self.code]['weather'])) # prompt weather
@@ -188,7 +193,7 @@ class menu:
             else:
                 if _input_weather: #true
                     print(self.dict[self.code]['view'].format(year= _input_year, week= _input_week))
-                    self.obj.displayHolidaysInWeek(self.obj.filter_holidays_by_week(_input_year,_input_week),self.obj.getWeather())
+                    self.obj.viewCurrentWeek(True)
                     # Return to main menu
                     self.returnMain()
                     return
@@ -371,15 +376,20 @@ class HolidayList:
         # return your holidays
 
     def displayHolidaysInWeek(self,holidayList,weather={}):
+        if len(holidayList) == 0:
+            print('\tNo holiday records.')
+            return
         for holiday in holidayList:
             if not weather: # if weather is empty
-                print(f'\t{holiday}')
+                f = lambda x: print(f'\t{x}')
+                f(holiday)
             else:
                 try:
-                    print(f'\t{holiday} - {weather[str(holiday.date)]}') # print weather
+                    f = lambda x: print(f'\t{holiday} - {weather[str(holiday.date)]}') # print weather
+                    f(holiday)
                 except:
-                    print('\tError while loading weather data.')
-        
+                    print('\tError while loading weather data.') # prevent dict key-error
+        return
         # ***
         # Use your filter_holidays_by_week to get list of holidays within a week as a parameter
         # Output formated holidays in the week. 
@@ -410,18 +420,17 @@ class HolidayList:
         # Query API for weather in that week range
         # Format weather information and return weather string.
 
-    def viewCurrentWeek(self):
+    def viewCurrentWeek(self,weather=False):
         holidays = self.filter_holidays_by_week(datetime.date.today().isocalendar()[0],datetime.date.today().isocalendar()[1])
-        self.displayHolidaysInWeek(holidays)
-        #prompt weather
-        self.displayHolidaysInWeek(holidays,self.getWeather())
+        if weather: self.displayHolidaysInWeek(holidays,self.getWeather())
+        else: self.displayHolidaysInWeek(holidays)
+        return
         # Use the Datetime Module to look up current week and year
         # Use your filter_holidays_by_week function to get the list of holidays 
         # for the current week/year
         # Use your displayHolidaysInWeek function to display the holidays in the week
         # Ask user if they want to get the weather
         # If yes, use your getWeather function and display results
-        pass 
 
     def viewAllHolidays(self):
         for holiday in self.innerHolidays:
