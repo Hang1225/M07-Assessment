@@ -7,7 +7,7 @@ import requests
 from dataclasses import dataclass,field
 import datetime
 from time import sleep
-fileLocation = 'Resources/'
+import createPrompt
 # -------------------------------------------
 # Modify the holiday class to 
 # can it be passed as date?
@@ -82,6 +82,8 @@ class menu:
 
     def importMenu(self):
         try:
+            createPrompt.generateJson()
+            sleep(1)
             with open('Resources/menu.json','r') as file:
                 self.dict = json.load(file)
         except:
@@ -153,7 +155,7 @@ class menu:
             _input = textValidate(input(''))
         else:
             if _input: #true
-                self.obj.save_to_json(fileLocation + 'holidays.json') # save file
+                self.obj.save_to_json('Resources/holidays.json') # save file
                 print(self.dict[self.code]["success"])
             elif not _input: #false
                 print(self.dict[self.code]["canceled"])
@@ -388,7 +390,9 @@ class HolidayList:
                     f = lambda x: print(f'\t{holiday} - {weather[str(holiday.date)]}') # print weather
                     f(holiday)
                 except:
-                    print('\tError while loading weather data.') # prevent dict key-error
+                    # prevent dict key-error in cases of weather api fail
+                    f = lambda x: print(f'\t{holiday} - No Weather Data') 
+                    f(holiday) 
         return
         # ***
         # Use your filter_holidays_by_week to get list of holidays within a week as a parameter
