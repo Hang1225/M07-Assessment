@@ -5,9 +5,9 @@ from typing import Dict
 from bs4 import BeautifulSoup
 import requests
 from dataclasses import dataclass,field
-import datetime
 from time import sleep
 import createPrompt
+
 # -------------------------------------------
 # Modify the holiday class to 
 # can it be passed as date?
@@ -84,7 +84,7 @@ class menu:
         try:
             createPrompt.generateJson()
             sleep(1)
-            with open('Resources/menu.json','r') as file:
+            with open(r'Resources/menu.json','r') as file:
                 self.dict = json.load(file)
         except:
             print('Error loading the file.')
@@ -155,7 +155,7 @@ class menu:
             _input = textValidate(input(''))
         else:
             if _input: #true
-                self.obj.save_to_json('Resources/holidays.json') # save file
+                self.obj.save_to_json(r'Resources/holidays.json') # save file
                 print(self.dict[self.code]["success"])
             elif not _input: #false
                 print(self.dict[self.code]["canceled"])
@@ -457,15 +457,15 @@ class HolidayList:
 
 def main():
     holiday = HolidayList()
-    holiday.read_json('Resources/holidays.json')
+    holiday.read_json(r'Resources/holidays.json')
     holiday.scrapeHolidays()
     print('\nInitialization complete. Now loading initialization report...')
     sleep(1)
     holiday.initializationReport()
     print('\nLoading main menu in 3 seconds...')
-    sleep(3)
     _menu = menu(holiday)
     _menu.importMenu()
+    sleep(3)
     _menu.displayMenu()
 
     # Large Pseudo Code steps
